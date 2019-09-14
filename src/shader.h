@@ -19,12 +19,7 @@ public:
         const char* fShaderCodeCstr = fShaderCode.c_str();
 
         GLuint vertex = compileVertexShader(vShaderCodeCstr);
-
-        GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fShaderCodeCstr, NULL);
-        glCompileShader(fragment);
-        checkCompilerErrorsShader(fragment, "FRAGMENT");
-
+        GLuint fragment = compileFragmentShader(fShaderCodeCstr);
         linkProgramAndDeleteShaders(vertex, fragment);
     }
 
@@ -53,6 +48,15 @@ private:
         checkCompilerErrorsShader(vertex, "VERTEX");
         return vertex;
     }
+
+    GLuint compileFragmentShader(const char * fShaderCodeCstr){
+        GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragment, 1, &fShaderCodeCstr, NULL);
+        glCompileShader(fragment);
+        checkCompilerErrorsShader(fragment, "FRAGMENT");
+        return fragment;
+    }    
+
     void linkProgramAndDeleteShaders(GLuint vertex, GLuint fragment){
         ID = glCreateProgram();
         glAttachShader(ID, vertex);

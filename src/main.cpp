@@ -14,7 +14,7 @@ void processInput(GLFWwindow *window);
 GLFWwindow* initLibrariesAndCreateWindow(int width, int height, const char *title);
 
 GLuint VBO, VAO, EBO;
-GLuint texture;
+GLuint texture1, texture2;
 
 
 void displayInit(){
@@ -51,8 +51,8 @@ void displayInit(){
     glEnableVertexAttribArray(2);
 
     //Texture
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -66,9 +66,29 @@ void displayInit(){
 
     if (data == NULL)
     {
-        throw std::runtime_error(std::string("ERROR: Failed to load image of texture"));
+        throw std::runtime_error(std::string("ERROR: Failed to load image of texture 1"));
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(data);
+    
+    //otra imagen
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    data = stbi_load(
+        "./awesomeface.png", 
+        &width, &height, &nrChannels, 0
+    );
+
+    if (data == NULL)
+    {
+        throw std::runtime_error(std::string("ERROR: Failed to load image of texture 2"));
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data);
 
@@ -77,6 +97,10 @@ void displayInit(){
 void displayUpdate(){
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glFlush();
@@ -91,13 +115,14 @@ void displayTerminate(){
 int main(){
     GLFWwindow* window = initLibrariesAndCreateWindow(800, 600, "Learn OpenGL");
     Shader ourShader("./vertex.vert", "./fragment.frag");
-
+    ourShader.use();
+    ourShader.setInt("texture1", 0);
+    ourShader.setInt("texture2", 1);
     displayInit();
 
     while (!glfwWindowShouldClose(window)){
         processInput(window);
 
-        glBindTexture(GL_TEXTURE_2D, texture);
         ourShader.use();
         displayUpdate();
 

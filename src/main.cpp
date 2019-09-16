@@ -21,7 +21,7 @@ GLuint VBO, VAO, EBO;
 GLuint texture1, texture2;
 
 
-void displayInit(){
+void displayInit(Shader & ourShader){
 
     float vertices[] = {
         // positions          // colors           // texture coords
@@ -95,7 +95,10 @@ void displayInit(){
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data);
-
+    
+    ourShader.use();
+    ourShader.setInt("texture1", 0);
+    ourShader.setInt("texture2", 1);
 }
 
 void displayUpdate(Shader & ourShader){
@@ -118,6 +121,23 @@ void displayUpdate(Shader & ourShader){
     
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    
+    
+        // create transformations
+        transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        transform = glm::translate(transform, glm::vec3(-0.5f, +0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        // get matrix's uniform location and set matrix
+        ourShader.use();
+        transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+        
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    
+    
+    
     glFlush();
 }
 
@@ -130,10 +150,8 @@ void displayTerminate(){
 int main(){
     GLFWwindow* window = initLibrariesAndCreateWindow(800, 600, "Learn OpenGL");
     Shader ourShader("./vertex.vert", "./fragment.frag");
-    ourShader.use();
-    ourShader.setInt("texture1", 0);
-    ourShader.setInt("texture2", 1);
-    displayInit();
+
+    displayInit(ourShader);
 
     while (!glfwWindowShouldClose(window)){
         processInput(window);
